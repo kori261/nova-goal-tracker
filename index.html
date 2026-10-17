@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NOVA — Goal Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{min-height:100vh;background:radial-gradient(circle at top,#172d70 0%,#080b18 45%,#03040a 100%);color:#fff}
+.app{width:100%;max-width:900px;min-height:100vh;margin:auto;padding:25px 20px 90px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+.logo{font-size:30px;font-weight:bold;letter-spacing:5px}
+.icon-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50%;width:42px;height:42px;cursor:pointer}
+.screen{display:none;animation:fade .3s ease}.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+h1{font-size:32px;margin-bottom:8px}.subtitle{color:#b9c4e8;margin-bottom:25px}
+.card{background:linear-gradient(145deg,rgba(57,93,190,.35),rgba(30,39,88,.35));border:1px solid rgba(140,170,255,.28);border-radius:22px;padding:22px;margin-bottom:18px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.goal-title{color:#b8c7ff;font-size:14px;margin-bottom:8px}.goal-name{font-size:26px;font-weight:bold;margin-bottom:15px}
+.progress-bg{width:100%;height:10px;background:rgba(255,255,255,.12);border-radius:10px;overflow:hidden}
+.progress{height:100%;width:0;background:linear-gradient(90deg,#43d9ff,#a98bff);border-radius:10px;transition:width .5s}
+.progress-text{margin-top:8px;color:#cbd4ff;font-size:14px}
+.section-title{font-size:18px;margin-bottom:12px}.target{font-size:21px;font-weight:bold;margin-bottom:8px}.small{color:#b9c4e8;font-size:14px}
+button{border:none;cursor:pointer}.primary{width:100%;padding:15px;border-radius:15px;margin-top:18px;color:#fff;font-size:16px;font-weight:bold;background:linear-gradient(90deg,#35cfff,#a88cff)}
+.secondary{padding:13px 18px;border-radius:13px;background:rgba(255,255,255,.09);color:#fff;border:1px solid rgba(255,255,255,.15)}
+.nova-says{border-left:4px solid #55dfff}.nova-label{color:#7ce7ff;font-weight:bold;margin-bottom:10px}
+.timer{text-align:center;font-size:70px;font-weight:bold;letter-spacing:4px;margin:30px 0;text-shadow:0 0 25px rgba(80,210,255,.35)}
+.timer-controls{display:flex;gap:10px}.timer-controls button{flex:1}
+.step{display:flex;align-items:center;gap:15px;padding:18px;margin-bottom:12px;border-radius:17px;background:rgba(255,255,255,.055);border:1px solid rgba(150,180,255,.18)}
+.step-number{min-width:40px;height:40px;border-radius:50%;display:flex;justify-content:center;align-items:center;background:#202d67;border:2px solid #657dff}
+.step.done{border-color:#50e1ff;background:rgba(53,210,255,.10)}.step.done .step-number{background:linear-gradient(135deg,#32d5ff,#9b8cff)}
+.step.current{box-shadow:0 0 20px rgba(92,142,255,.22);border-color:#8297ff}
+.step-name{font-weight:bold}.step-status{color:#aab8df;font-size:13px;margin-top:5px}
+.mini-progress{height:7px;background:rgba(255,255,255,.10);border-radius:8px;overflow:hidden;margin-top:10px;width:100%}
+.mini-fill{height:100%;background:linear-gradient(90deg,#43d9ff,#a98bff);width:0}
+.milestone-percent{font-size:12px;color:#b9c4e8;margin-top:5px}
+.journey-visual{position:relative;height:390px;border-radius:22px;overflow:hidden;margin-bottom:18px;background:radial-gradient(circle at 78% 18%,rgba(90,180,255,.25),transparent 24%),linear-gradient(180deg,#101c48 0%,#070a18 100%);border:1px solid rgba(140,170,255,.25)}
+.journey-stars{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.8) 1px,transparent 1px);background-size:48px 48px;opacity:.22}
+.airplane{position:absolute;right:7%;top:12%;font-size:58px;filter:drop-shadow(0 0 18px rgba(90,210,255,.5))}
+.airplane-door{position:absolute;right:12%;top:31%;width:55px;height:76px;border:3px solid #6ee7ff;border-radius:28px 28px 8px 8px;background:rgba(30,70,130,.8)}
+.staircase{position:absolute;left:10%;bottom:28px;width:76%;height:250px;transform:skewY(-24deg);transform-origin:bottom left}
+.stair{position:absolute;left:0;width:100%;height:35px;border:2px solid rgba(120,210,255,.45);border-radius:7px;background:linear-gradient(90deg,rgba(70,130,220,.45),rgba(155,125,255,.3))}.stair:nth-child(1){bottom:0}.stair:nth-child(2){bottom:42px}.stair:nth-child(3){bottom:84px}.stair:nth-child(4){bottom:126px}.stair:nth-child(5){bottom:168px}.stair:nth-child(6){bottom:210px}
+.journey-person{position:absolute;left:18%;bottom:44px;font-size:40px;z-index:3;transition:all .5s ease}.journey-caption{position:absolute;left:20px;bottom:15px;color:#c9d5ff;font-size:13px}.journey-complete{position:absolute;right:8%;top:12%;font-size:14px;color:#9eeeff;font-weight:bold}
+.info-row{display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.info-row:last-child{border-bottom:none}
+.center{text-align:center}.footer{text-align:center;margin-top:25px;color:#7180a8;font-size:12px}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;background:rgba(255,255,255,.08);color:#c9d4ff}
+.complete-btn{margin-top:12px;width:100%;padding:12px;border-radius:12px;background:rgba(78,220,255,.12);color:#8cecff;border:1px solid rgba(78,220,255,.25)}
+.usage-chip{display:inline-block;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.07);margin:4px 4px 0 0;font-size:12px;color:#d5ddff}.attention{border-color:rgba(255,210,100,.35)}
+.bottom-nav{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);width:calc(100% - 25px);max-width:850px;padding:10px;display:flex;gap:8px;background:rgba(8,12,30,.88);backdrop-filter:blur(15px);border:1px solid rgba(150,170,255,.18);border-radius:20px;z-index:10}
+.nav-btn{flex:1;padding:11px 5px;border-radius:13px;background:transparent;color:#aeb9dc;font-size:12px}.nav-btn.active{color:#fff;background:linear-gradient(90deg,rgba(57,211,255,.25),rgba(163,130,255,.25))}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.cal-head,.cal-day{text-align:center;padding:7px 3px;font-size:11px}.cal-head{color:#8290bd;font-weight:700}.cal-day{min-height:48px;border:1px solid rgba(150,170,255,.12);border-radius:10px;background:rgba(255,255,255,.025)}.cal-day.empty{border-color:transparent;background:transparent}.cal-day.done{background:rgba(55,220,150,.16);border-color:rgba(55,220,150,.35)}.cal-day.partial{background:rgba(255,190,70,.12);border-color:rgba(255,190,70,.35)}.cal-day.today{box-shadow:0 0 0 1px rgba(100,190,255,.65) inset}.cal-day .day-num{font-weight:700}.cal-day .day-mark{font-size:15px;margin-top:4px}.streak{font-size:28px;font-weight:800}.plan-item{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid rgba(150,170,255,.10)}.plan-item:last-child{border-bottom:0}.plan-time{min-width:82px;font-weight:700;color:#8fe7ff}.plan-check{font-size:20px}.plan-item.done .plan-title{text-decoration:line-through;opacity:.65}.mini-input{width:100%;padding:11px;border-radius:10px;border:1px solid rgba(150,170,255,.18);background:#0c1230;color:#fff}
+.task-editor{margin-top:18px;padding:15px;border-radius:16px;background:rgba(5,12,38,.45);border:1px solid rgba(100,170,255,.22)}
+.task-editor-title{font-weight:700;color:#aeeeff;margin-bottom:12px}
+.task-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.task-field{display:flex;flex-direction:column;gap:6px;color:#cbd6ff;font-size:13px}
+.task-field.full{grid-column:1/-1}
+.task-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.task-actions .secondary{padding:8px 10px;font-size:12px}
+.task-total{margin-top:10px;color:#aeeeff;font-size:13px}
+@media(max-width:480px){.task-form-grid{grid-template-columns:1fr}.task-field.full{grid-column:auto}.plan-time{min-width:75px;font-size:12px}}
+
+
+/* NOVA first-time onboarding */
+.onboarding-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,5,18,.92);backdrop-filter:blur(16px)}
+.onboarding-overlay.hidden{display:none}
+.onboarding-panel{width:100%;max-width:540px;max-height:92vh;overflow:auto;border:1px solid rgba(115,190,255,.38);border-radius:26px;padding:26px;background:radial-gradient(circle at top right,rgba(76,111,255,.25),transparent 40%),linear-gradient(145deg,#101a43,#080d22);box-shadow:0 24px 90px rgba(0,0,0,.55)}
+.onboarding-brand{font-size:13px;letter-spacing:5px;color:#83eaff;font-weight:800;margin-bottom:18px}
+.onboarding-title{font-size:29px;line-height:1.2;margin-bottom:10px}
+.onboarding-copy{color:#c0cbed;line-height:1.6;font-size:14px;margin-bottom:20px}
+.onboarding-progress{height:5px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;margin:18px 0 22px}
+.onboarding-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#35cfff,#a88cff);transition:width .25s}
+.onboarding-step{display:none}.onboarding-step.active{display:block;animation:fade .2s ease}
+.onboarding-label{display:block;color:#d9e3ff;font-size:13px;margin:14px 0 7px}
+.onboarding-input{width:100%;padding:14px;border-radius:12px;border:1px solid rgba(150,180,255,.25);background:#080f2b;color:#fff;font-size:15px;outline:none}
+.onboarding-input:focus{border-color:#63ddff;box-shadow:0 0 0 3px rgba(70,210,255,.12)}
+.onboarding-buttons{display:flex;gap:10px;margin-top:22px}.onboarding-buttons button{flex:1;margin-top:0}
+.onboarding-note{font-size:12px;color:#9eafd9;line-height:1.5;margin-top:10px}
+.onboarding-points{display:grid;gap:10px;margin:20px 0}.onboarding-point{padding:12px;border:1px solid rgba(150,180,255,.16);border-radius:13px;background:rgba(255,255,255,.04);color:#dbe4ff;font-size:14px}
+@media(max-width:480px){.onboarding-panel{padding:21px}.onboarding-title{font-size:25px}.onboarding-buttons{flex-direction:column}}
+
+@media(max-width:600px){.app{padding:20px 14px 90px}h1{font-size:27px}.timer{font-size:55px}.info-row{font-size:14px}}
+
+/* NOVA BLACK & GOLD THEME — unified across the app and onboarding */
+:root{
+ --nova-bg:#080807;
+ --nova-bg-deep:#030303;
+ --nova-panel:#17130a;
+ --nova-panel-2:#211a0c;
+ --nova-gold:#d4af37;
+ --nova-gold-bright:#f6d76b;
+ --nova-gold-soft:#f1df9b;
+ --nova-text:#fffaf0;
+ --nova-muted:#c9bea0;
+ --nova-border:rgba(212,175,55,.34);
+}
+html{background:var(--nova-bg-deep)}
+body{
+ background:radial-gradient(circle at top,#3a2b0b 0%,#11100b 34%,#050505 75%,#020202 100%) !important;
+ color:var(--nova-text) !important;
+}
+.app{color:var(--nova-text)}
+.logo,.footer{color:var(--nova-gold-bright)}
+h1,h2,h3,.goal-name,.target,.section-title,.plan-title,.journey-caption{color:var(--nova-text)}
+.subtitle,.small,.progress-text,.onboarding-copy{color:var(--nova-muted) !important}
+.card,.onboarding-panel{
+ background:linear-gradient(145deg,rgba(58,45,14,.94),rgba(18,16,10,.98)) !important;
+ border:1px solid var(--nova-border) !important;
+ box-shadow:0 12px 38px rgba(0,0,0,.38),0 0 18px rgba(212,175,55,.045) !important;
+}
+.nova-says{border-left:4px solid var(--nova-gold-bright) !important}
+.nova-label,.goal-title,.onboarding-brand,.onboarding-label{color:var(--nova-gold-bright) !important}
+.primary,.complete-btn{
+ background:linear-gradient(100deg,#9b7620,#d4af37 55%,#f3d66d) !important;
+ color:#100d05 !important;
+ border:1px solid rgba(255,225,130,.7) !important;
+ box-shadow:0 5px 20px rgba(212,175,55,.16);
+}
+.primary:hover,.complete-btn:hover{filter:brightness(1.08)}
+.secondary,.icon-btn,.nav-btn{
+ background:rgba(212,175,55,.08) !important;
+ color:var(--nova-gold-soft) !important;
+ border:1px solid rgba(212,175,55,.28) !important;
+}
+.nav-btn.active,.nav-btn:hover,.icon-btn:hover{background:rgba(212,175,55,.2) !important;color:#ffe99b !important}
+.bottom-nav{
+ background:rgba(8,8,7,.96) !important;
+ border-top:1px solid var(--nova-border) !important;
+ backdrop-filter:blur(16px);
+}
+.progress-bg,.mini-progress,.onboarding-progress{background:rgba(255,255,255,.11) !important}
+.progress,.mini-fill,.onboarding-progress-fill{
+ background:linear-gradient(90deg,#9b7620,#d4af37,#ffe99b) !important;
+}
+.badge,.usage-chip,.plan-check{
+ background:rgba(212,175,55,.13) !important;
+ color:var(--nova-gold-soft) !important;
+ border-color:var(--nova-border) !important;
+}
+input,select,textarea,.onboarding-input{
+ background:#100e08 !important;
+ color:var(--nova-text) !important;
+ border:1px solid rgba(212,175,55,.32) !important;
+}
+input:focus,select:focus,textarea:focus,.onboarding-input:focus{
+ border-color:var(--nova-gold-bright) !important;
+ box-shadow:0 0 0 3px rgba(212,175,55,.15) !important;
+}
+.onboarding-overlay{background:rgba(2,2,1,.94) !important}
+.onboarding-panel{
+ background:radial-gradient(circle at top right,rgba(212,175,55,.19),transparent 43%),linear-gradient(145deg,#211a0c,#080807) !important;
+}
+.onboarding-progress-fill{background:linear-gradient(90deg,#9b7620,#d4af37,#ffe99b) !important}
+.onboarding-point{
+ background:rgba(212,175,55,.07) !important;
+ border-color:rgba(212,175,55,.22) !important;
+ color:#f4e8bf !important;
+}
+.timer{text-shadow:0 0 25px rgba(212,175,55,.24) !important;color:var(--nova-gold-bright) !important}
+.journey-visual{
+ background:radial-gradient(circle at top,#3b2b0b 0%,#100e08 55%,#050505 100%) !important;
+ border-color:var(--nova-border) !important;
+}
+.stair,.journey-step,.staircase .stair{background:linear-gradient(90deg,#735719,#d4af37) !important;border-color:rgba(255,225,130,.5) !important}
+.airplane,.journey-person,.journey-complete{filter:drop-shadow(0 0 8px rgba(212,175,55,.35))}
+.calendar,.cal-day,.cal-head{border-color:rgba(212,175,55,.22) !important}
+.cal-day.today{background:rgba(212,175,55,.2) !important;border-color:var(--nova-gold-bright) !important}
+.cal-day.completed,.cal-day.done{background:rgba(212,175,55,.24) !important}
+.task-field label,.task-total{color:var(--nova-gold-soft) !important}
+.task-form-grid input,.task-form-grid select{background:#100e08 !important}
+button:focus-visible{outline:2px solid var(--nova-gold-bright) !important;outline-offset:3px}
+
+
+
+/* NOVA ORIGINAL NEON BLUE THEME — restored from the first concept */
+:root{
+ --nova-bg:#070b18;
+ --nova-bg-deep:#030611;
+ --nova-panel:#101a32;
+ --nova-panel-2:#152443;
+ --nova-gold:#56a8ff;
+ --nova-gold-bright:#7bd4ff;
+ --nova-gold-soft:#c4e7ff;
+ --nova-text:#f4f8ff;
+ --nova-muted:#b3c5e6;
+ --nova-border:rgba(75,150,255,.34);
+}
+html{background:#030611 !important}
+body{
+ background:radial-gradient(ellipse at 50% -10%,#172e67 0%,#0b1430 38%,#050916 72%,#02040b 100%) !important;
+ color:#f4f8ff !important;
+}
+.app{color:#f4f8ff !important}
+.logo,.footer{color:#78caff !important;text-shadow:0 0 18px rgba(64,150,255,.38)}
+h1,h2,h3,.goal-name,.target,.section-title,.plan-title,.journey-caption{color:#f4f8ff !important}
+.subtitle,.small,.progress-text,.onboarding-copy{color:#b3c5e6 !important}
+.card,.onboarding-panel{
+ background:linear-gradient(145deg,rgba(19,35,70,.91),rgba(8,15,33,.97)) !important;
+ border:1px solid rgba(82,153,255,.27) !important;
+ box-shadow:0 12px 38px rgba(0,0,0,.35),0 0 24px rgba(47,128,255,.08),inset 0 1px 0 rgba(255,255,255,.035) !important;
+ backdrop-filter:blur(12px);
+}
+.nova-says{border-left:4px solid #79d8ff !important}
+.nova-label,.goal-title,.onboarding-brand,.onboarding-label{color:#7bd4ff !important}
+.primary,.complete-btn{
+ background:linear-gradient(105deg,#2563eb,#398cff 52%,#70dcff) !important;
+ color:#fff !important;
+ border:1px solid rgba(151,218,255,.72) !important;
+ box-shadow:0 5px 24px rgba(45,132,255,.3),0 0 15px rgba(65,170,255,.13) !important;
+}
+.primary:hover,.complete-btn:hover{filter:brightness(1.12)}
+.secondary,.icon-btn,.nav-btn{
+ background:rgba(65,130,255,.09) !important;
+ color:#c8e8ff !important;
+ border:1px solid rgba(82,153,255,.24) !important;
+}
+.nav-btn.active,.nav-btn:hover,.icon-btn:hover{background:rgba(62,135,255,.22) !important;color:#fff !important;box-shadow:0 0 16px rgba(54,135,255,.13)}
+.bottom-nav{background:rgba(5,9,22,.96) !important;border-top:1px solid rgba(82,153,255,.25) !important;backdrop-filter:blur(16px)}
+.progress-bg,.mini-progress,.onboarding-progress{background:rgba(255,255,255,.1) !important}
+.progress,.mini-fill,.onboarding-progress-fill{background:linear-gradient(90deg,#2868f0,#399bff,#78dcff) !important;box-shadow:0 0 12px rgba(66,159,255,.24)}
+.badge,.usage-chip,.plan-check{background:rgba(65,130,255,.14) !important;color:#c4e7ff !important;border-color:rgba(82,153,255,.28) !important}
+input,select,textarea,.onboarding-input{background:#080f22 !important;color:#f4f8ff !important;border:1px solid rgba(82,153,255,.31) !important}
+input:focus,select:focus,textarea:focus,.onboarding-input:focus{border-color:#7bd4ff !important;box-shadow:0 0 0 3px rgba(65,150,255,.15),0 0 14px rgba(65,150,255,.08) !important}
+.onboarding-overlay{background:rgba(2,5,15,.94) !important}
+.onboarding-panel{background:radial-gradient(circle at top right,rgba(50,120,255,.2),transparent 44%),linear-gradient(145deg,#14264c,#070c1b) !important}
+.onboarding-progress-fill{background:linear-gradient(90deg,#2868f0,#399bff,#78dcff) !important}
+.onboarding-point{background:rgba(65,130,255,.08) !important;border-color:rgba(82,153,255,.23) !important;color:#d8eaff !important}
+.timer{text-shadow:0 0 25px rgba(61,155,255,.32) !important;color:#7bd4ff !important}
+.journey-visual{background:radial-gradient(circle at top,#172e67 0%,#0b1430 55%,#050916 100%) !important;border-color:rgba(82,153,255,.3) !important}
+.stair,.journey-step,.staircase .stair{background:linear-gradient(90deg,#2454c7,#399bff,#78dcff) !important;border-color:rgba(151,218,255,.5) !important;box-shadow:0 0 14px rgba(54,135,255,.15)}
+.airplane,.journey-person,.journey-complete{filter:drop-shadow(0 0 8px rgba(74,170,255,.42))}
+.calendar,.cal-day,.cal-head{border-color:rgba(82,153,255,.22) !important}
+.cal-day.today{background:rgba(65,130,255,.2) !important;border-color:#7bd4ff !important}
+.cal-day.completed,.cal-day.done{background:rgba(65,130,255,.24) !important}
+.task-field label,.task-total{color:#c4e7ff !important}
+.task-form-grid input,.task-form-grid select{background:#080f22 !important}
+button:focus-visible{outline:2px solid #7bd4ff !important;outline-offset:3px}
+
+
+/* FINAL POLISHED NEON GLASS THEME — deep navy, electric blue, violet and cyan */
+:root{
+ --nova-night:#050816;
+ --nova-blue:#398bff;
+ --nova-cyan:#5ce1ff;
+ --nova-violet:#9b7bff;
+ --nova-glass:rgba(13,25,53,.58);
+ --nova-glass-border:rgba(112,174,255,.25);
+}
+html,body{background-color:var(--nova-night)!important}
+body{
+ background:
+   radial-gradient(ellipse at 12% 6%,rgba(38,92,220,.28),transparent 34%),
+   radial-gradient(ellipse at 92% 18%,rgba(126,66,255,.19),transparent 31%),
+   radial-gradient(ellipse at 50% 100%,rgba(0,170,255,.12),transparent 36%),
+   linear-gradient(145deg,#050816 0%,#080f24 48%,#030611 100%) !important;
+ color:#f5f8ff!important;
+}
+.app{position:relative;isolation:isolate}
+.logo{
+ background:linear-gradient(100deg,#58c9ff 0%,#5f8dff 38%,#b58aff 70%,#62e7ff 100%)!important;
+ -webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;
+ -webkit-text-fill-color:transparent!important;
+ text-shadow:0 0 22px rgba(64,151,255,.20)!important;
+ letter-spacing:6px!important;font-weight:900!important;
+}
+.onboarding-brand{
+ background:linear-gradient(100deg,#58c9ff 0%,#6c8bff 42%,#b58aff 72%,#62e7ff 100%)!important;
+ -webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;
+ -webkit-text-fill-color:transparent!important;text-shadow:0 0 20px rgba(64,151,255,.22)!important;
+}
+.card,.onboarding-panel{
+ background:linear-gradient(135deg,rgba(22,39,78,.72),rgba(8,16,36,.76))!important;
+ border:1px solid rgba(118,173,255,.25)!important;
+ box-shadow:0 14px 40px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.055),0 0 22px rgba(45,113,255,.055)!important;
+ backdrop-filter:blur(18px) saturate(135%)!important;
+ -webkit-backdrop-filter:blur(18px) saturate(135%)!important;
+}
+.card{position:relative;overflow:hidden}
+.card:before{content:"";position:absolute;inset:0 0 auto;height:1px;background:linear-gradient(90deg,transparent,rgba(102,202,255,.4),rgba(164,127,255,.32),transparent);pointer-events:none}
+.primary,.complete-btn{
+ background:linear-gradient(100deg,#2867f5 0%,#398eff 48%,#5bceff 100%)!important;
+ color:#fff!important;border:1px solid rgba(150,218,255,.68)!important;
+ box-shadow:0 7px 24px rgba(42,115,255,.28),0 0 18px rgba(69,155,255,.16),inset 0 1px 0 rgba(255,255,255,.2)!important;
+ transition:transform .18s ease,filter .18s ease,box-shadow .18s ease!important;
+}
+.primary:hover,.complete-btn:hover{filter:brightness(1.12)!important;transform:translateY(-1px);box-shadow:0 9px 28px rgba(42,115,255,.38),0 0 22px rgba(69,155,255,.22)!important}
+.secondary,.icon-btn,.nav-btn{
+ background:rgba(56,107,205,.10)!important;color:#d7eaff!important;
+ border:1px solid rgba(107,159,255,.23)!important;
+}
+.nav-btn.active,.nav-btn:hover,.icon-btn:hover{
+ background:linear-gradient(120deg,rgba(50,123,255,.25),rgba(142,91,255,.19))!important;
+ color:#fff!important;border-color:rgba(116,181,255,.42)!important;
+ box-shadow:0 0 18px rgba(55,130,255,.13),inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+.bottom-nav{
+ background:rgba(5,10,25,.78)!important;border:1px solid rgba(103,158,255,.22)!important;
+ box-shadow:0 10px 36px rgba(0,0,0,.36),0 0 24px rgba(44,105,255,.07)!important;
+ backdrop-filter:blur(22px) saturate(150%)!important;
+}
+.nova-says{border-left:3px solid #67d8ff!important;background:linear-gradient(120deg,rgba(28,71,128,.48),rgba(12,20,44,.72))!important}
+.nova-label,.goal-title,.onboarding-label,.task-field label,.task-total{color:#80dfff!important}
+.subtitle,.small,.progress-text,.onboarding-copy,.onboarding-note{color:#b8c9e9!important}
+.progress-bg,.mini-progress,.onboarding-progress{background:rgba(180,205,255,.11)!important}
+.progress,.mini-fill,.onboarding-progress-fill{
+ background:linear-gradient(90deg,#3674ff 0%,#4ba9ff 52%,#64e6ff 100%)!important;
+ box-shadow:0 0 13px rgba(64,160,255,.30)!important;
+}
+.badge,.usage-chip,.plan-check{background:linear-gradient(110deg,rgba(54,123,255,.17),rgba(143,96,255,.12))!important;color:#d8eaff!important;border:1px solid rgba(105,163,255,.24)!important}
+input,select,textarea,.onboarding-input,.task-form-grid input,.task-form-grid select{
+ background:rgba(5,13,31,.84)!important;color:#f5f8ff!important;border:1px solid rgba(105,159,255,.28)!important;
+}
+input:focus,select:focus,textarea:focus,.onboarding-input:focus{
+ border-color:#67d8ff!important;box-shadow:0 0 0 3px rgba(65,150,255,.13),0 0 16px rgba(65,150,255,.10)!important;outline:none!important;
+}
+.onboarding-overlay{background:rgba(2,5,16,.84)!important;backdrop-filter:blur(20px)!important}
+.onboarding-panel{
+ background:radial-gradient(circle at 92% 0%,rgba(125,87,255,.20),transparent 38%),radial-gradient(circle at 0% 100%,rgba(37,139,255,.15),transparent 42%),linear-gradient(145deg,rgba(16,31,66,.96),rgba(5,10,25,.97))!important;
+ border-color:rgba(113,173,255,.34)!important;
+}
+.onboarding-point{background:rgba(48,94,175,.12)!important;border-color:rgba(105,159,255,.23)!important;color:#dceaff!important}
+.timer{color:#7ee4ff!important;text-shadow:0 0 14px rgba(69,178,255,.30),0 0 32px rgba(69,112,255,.18)!important}
+.journey-visual{
+ background:radial-gradient(circle at 76% 12%,rgba(131,87,255,.25),transparent 24%),radial-gradient(circle at 18% 72%,rgba(42,136,255,.19),transparent 34%),linear-gradient(180deg,#101d43 0%,#070d20 64%,#040713 100%)!important;
+ border:1px solid rgba(111,169,255,.32)!important;box-shadow:inset 0 0 36px rgba(41,106,255,.08),0 14px 38px rgba(0,0,0,.25)!important;
+}
+.journey-stars{opacity:.38!important;background-image:radial-gradient(circle,rgba(172,221,255,.95) 1px,transparent 1.3px)!important}
+.stair,.journey-step,.staircase .stair{
+ background:linear-gradient(100deg,#2457d7 0%,#398cff 48%,#69ddff 100%)!important;
+ border:1px solid rgba(153,220,255,.65)!important;
+ box-shadow:0 0 9px rgba(46,135,255,.48),0 0 22px rgba(53,129,255,.24),inset 0 1px 0 rgba(255,255,255,.35)!important;
+}
+.airplane{filter:drop-shadow(0 0 9px rgba(96,190,255,.8)) drop-shadow(0 0 20px rgba(105,113,255,.35))!important}
+.journey-person{filter:drop-shadow(0 0 10px rgba(83,174,255,.7))!important}
+.journey-complete{color:#9ceaff!important;text-shadow:0 0 12px rgba(67,177,255,.45)!important}
+.calendar,.cal-day,.cal-head{border-color:rgba(105,159,255,.22)!important}
+.cal-day.today,.cal-day.completed,.cal-day.done{background:rgba(56,126,255,.19)!important;border-color:rgba(104,204,255,.55)!important;box-shadow:inset 0 0 12px rgba(55,137,255,.10)!important}
+button:focus-visible{outline:2px solid #68dfff!important;outline-offset:3px}
+@media(hover:hover){.card{transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}.card:hover{border-color:rgba(115,187,255,.34)!important;box-shadow:0 16px 44px rgba(0,0,0,.32),0 0 25px rgba(45,113,255,.08)!important}}
+
+</style>
+
+<meta name="theme-color" content="#081126">
+<meta name="description" content="NOVA — Plan your day. Change your life.">
+<meta name="application-name" content="NOVA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NOVA">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/nova-192.png">
+<link rel="apple-touch-icon" href="icons/nova-192.png">
+</head>
+<body>
+
+<div id="onboardingOverlay" class="onboarding-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+ <div class="onboarding-panel">
+  <div class="onboarding-brand">N O V A</div>
+  <div class="onboarding-progress"><div id="onboardingProgressFill" class="onboarding-progress-fill"></div></div>
+  <div class="onboarding-step active" data-onboarding-step="0">
+   <h1 id="onboardingTitle" class="onboarding-title">Plan your day. Change your life.</h1>
+   <p class="onboarding-copy">Welcome to NOVA. First, choose one main goal. NOVA will help turn it into small steps, a daily target and a journey you can track.</p>
+   <div class="onboarding-points"><div class="onboarding-point">🎯 One main goal at a time</div><div class="onboarding-point">🪜 A beginner-friendly step-by-step journey</div><div class="onboarding-point">⏱ Your time, your timetable, your control</div></div>
+   <button class="primary" type="button" onclick="nextOnboardingStep()">Let's Set Up NOVA →</button>
+  </div>
+  <div class="onboarding-step" data-onboarding-step="1">
+   <h2 class="onboarding-title">What is your ONE main goal?</h2>
+   <p class="onboarding-copy">Choose the most important thing you want to work toward right now. You can update it later.</p>
+   <label class="onboarding-label" for="onboardingGoal">My main goal</label>
+   <input id="onboardingGoal" class="onboarding-input" maxlength="100" placeholder="e.g. IELTS, Web Development, SAP FICO" autocomplete="off">
+  </div>
+  <div class="onboarding-step" data-onboarding-step="2">
+   <h2 class="onboarding-title">Why does it matter?</h2>
+   <p class="onboarding-copy">Your reason helps you remember why you started.</p>
+   <label class="onboarding-label" for="onboardingWhy">Why is this goal important?</label>
+   <input id="onboardingWhy" class="onboarding-input" maxlength="180" placeholder="e.g. Better future">
+   <label class="onboarding-label" for="onboardingDeadline">When would you like to achieve it?</label>
+   <input id="onboardingDeadline" class="onboarding-input" type="date">
+  </div>
+  <div class="onboarding-step" data-onboarding-step="3">
+   <h2 class="onboarding-title">How much time can you give daily?</h2>
+   <p class="onboarding-copy">Choose a realistic amount of time. You can change it any day.</p>
+   <label class="onboarding-label" for="onboardingDailyMinutes">Daily time (minutes)</label>
+   <input id="onboardingDailyMinutes" class="onboarding-input" type="number" min="5" max="1440" step="5" value="60">
+   <p class="onboarding-note">Examples: 30 = half an hour • 60 = 1 hour • 240 = 4 hours. NOVA will create a roadmap based on your goal and available time.</p>
+   <div class="onboarding-buttons"><button class="secondary" type="button" onclick="previousOnboardingStep()">← Back</button><button class="primary" type="button" onclick="completeOnboarding()">Create My Journey 🚀</button></div>
+  </div>
+  <div id="onboardingNav" class="onboarding-buttons" style="display:none"><button class="secondary" type="button" onclick="previousOnboardingStep()">← Back</button><button id="onboardingNextButton" class="primary" type="button" onclick="nextOnboardingStep()">Next →</button></div>
+  <p class="onboarding-note">NOVA • Discipline Today. Success Tomorrow.</p>
+ </div>
+</div>
+
+<div class="app">
+<header><div class="logo">NOVA</div><button class="icon-btn" onclick="showScreen('profile')">⚙</button></header>
+
+<section id="home" class="screen active">
+<h1 id="greeting">Welcome back 👋</h1>
+<p class="subtitle">Plan your day. Change your life.</p>
+<div class="card">
+<div class="goal-title">🎯 YOUR MAIN GOAL</div>
+<div class="goal-name" id="homeGoalName">Learn Web Development</div>
+<div class="progress-bg"><div class="progress" id="homeProgress"></div></div>
+<div class="progress-text" id="progressText">0% completed</div>
+</div>
+<div class="card">
+<div class="section-title">🎯 Today's Target</div>
+<div class="target" id="todayTarget">HTML Basics</div>
+<div class="small" id="targetStatus">Complete your next step toward your goal.</div>
+<div style="margin-top:15px">
+  <div class="info-row"><span>Milestone progress</span><strong id="milestoneProgressLabel">0 / 60 min</strong></div>
+  <div class="progress-bg"><div class="progress" id="milestoneTargetProgress" style="width:0%"></div></div>
+  <div class="info-row" style="margin-top:10px"><span>Today's daily target</span><strong id="dailyTargetProgressLabel">0 / 60 min</strong></div>
+  <div class="progress-bg"><div class="progress" id="dailyTargetProgress" style="width:0%"></div></div>
+  <div class="small" id="smartTargetTip" style="margin-top:12px">NOVA will suggest your next small focus step here.</div>
+</div>
+<button class="primary" id="homeAction" onclick="startNextAction()">🚀 Start Focus</button>
+</div>
+<div class="card">
+<div class="section-title">⏱ Today's Progress</div>
+<div class="info-row"><span>Daily Goal Time</span><strong id="homeDailyTime">60 min</strong></div>
+<div class="info-row"><span>Today's Focus</span><strong id="focusDone">0 min</strong></div>
+<div class="info-row"><span>Current Milestone</span><strong id="currentMilestoneHome">HTML Basics</strong></div>
+</div>
+<div class="card nova-says"><div class="nova-label">💡 NOVA Says</div><p id="novaMessage">You don't need to finish everything today. Just complete the next step.</p></div>
+<div class="card" id="dailyAnalysisCard">
+<div class="section-title">🧠 NOVA Daily Analysis</div>
+<div class="small" id="dailyAnalysis">NOVA is analysing your goal, today's target and your activity.</div>
+<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+<span class="usage-chip" id="analysisGoalChip">🎯 Goal</span>
+<span class="usage-chip" id="analysisTargetChip">⏱ Target</span>
+<span class="usage-chip" id="analysisActivityChip">📊 Activity</span>
+</div>
+<button class="primary" style="margin-top:15px" id="analysisAction" onclick="startNextAction()">🚀 Take Next Action</button>
+</div>
+</section>
+
+<section id="focus" class="screen">
+<h1>NOVA Focus 🚀</h1><p class="subtitle">Focus on one task at a time.</p>
+<div class="card center">
+<div class="section-title">🎯 Current Target</div>
+<div class="target" id="focusTarget">HTML Basics</div>
+<div class="small">A completed session updates your tracker.</div>
+<div class="focus-duration" style="display:flex;gap:8px;align-items:end;margin:16px 0 8px;text-align:left;">
+  <label style="flex:1;color:#b9c4e8;font-size:13px;">Set focus time (minutes)
+    <input id="focusMinutesInput" class="mini-input" type="number" min="1" max="720" step="1" value="25" style="margin-top:6px;" />
+  </label>
+  <button class="secondary" id="setFocusDurationButton" onclick="applyFocusDuration()" style="min-width:100px;">Set Time</button>
+</div>
+<div class="small" id="focusDurationHint" style="margin-bottom:8px;">Choose any time from 1 to 720 minutes.</div>
+<div class="timer" id="timer">25:00</div>
+<div class="timer-controls">
+<button class="primary" id="timerButton" onclick="toggleTimer()">▶ Start</button>
+<button class="secondary" onclick="resetTimer()">↻ Reset</button>
+</div>
+<button class="complete-btn" onclick="confirmSession()">✓ I completed this session</button>
+</div>
+<div class="card nova-says"><div class="nova-label">💡 NOVA Says</div><p id="focusMessage">Don't worry about the whole journey. Focus only on this session.</p></div>
+</section>
+
+<section id="journey" class="screen">
+<h1>My Journey 🪜</h1><p class="subtitle">Your goal moves forward as your milestones progress.</p>
+<div class="journey-visual"><div class="journey-stars"></div><div class="airplane">✈️</div><div class="airplane-door"></div><div class="journey-complete" id="journeyVisualLabel">NEXT STEP</div><div class="staircase"><div class="stair"></div><div class="stair"></div><div class="stair"></div><div class="stair"></div><div class="stair"></div><div class="stair"></div></div><div class="journey-person" id="journeyPerson">🧑‍💻</div><div class="journey-caption">NOVA JOURNEY • Keep taking the next step.</div></div><div class="card" id="journeyList"></div>
+<div class="card center" id="journeyBottom"></div>
+</section>
+
+<section id="screenTime" class="screen">
+<h1>Screen Time 📱</h1><p class="subtitle">NOVA helps you understand your time, not judge it.</p>
+<div class="card"><div class="section-title">⏱ Today</div><div class="target" id="screenTotal">0 min</div><div class="small" id="screenSummary">Add your app usage to see NOVA's analysis.</div></div>
+<div class="card"><div class="section-title">📊 App Usage</div><div id="usageList"></div><button class="secondary" style="margin-top:15px;width:100%" onclick="addUsage()">＋ Add / Update App</button></div>
+<div class="card nova-says" id="screenInsightCard"><div class="nova-label">💡 NOVA Says</div><p id="screenInsight">NOVA will analyse your usage against your main goal.</p><button class="primary" onclick="startNextAction()">🚀 Take Next Action</button></div>
+<div class="card"><div class="section-title">🧠 How NOVA analyses</div><div class="small">Goal-related learning and work can support your goal. Entertainment or social time is not automatically bad—NOVA looks at your intention and balance.</div><div style="margin-top:10px"><span class="usage-chip">🎯 Goal Related</span><span class="usage-chip">📚 Learning</span><span class="usage-chip">💼 Work</span><span class="usage-chip">🎮 Entertainment</span><span class="usage-chip">💬 Social</span></div></div>
+</section>
+
+<section id="goals" class="screen">
+<h1>My Goal 🎯</h1><p class="subtitle">NOVA automatically keeps your milestone progress updated.</p>
+<div class="card">
+<div class="info-row"><span>Main Goal</span><strong id="goalNameText">Learn Web Development</strong></div>
+<div class="info-row"><span>Why</span><strong id="goalWhyText">Better future</strong></div>
+<div class="info-row"><span>Deadline</span><strong id="goalDeadlineText">31 December 2026</strong></div>
+<div class="info-row"><span>Daily Time</span><strong id="goalDailyTime">60 minutes</strong></div>
+<button class="primary" onclick="editGoal()">✏️ Edit My Goal</button>
+</div>
+<div class="card" id="goalMilestones"></div>
+</section>
+
+<section id="planner" class="screen">
+<h1>Daily Plan 📅</h1><p class="subtitle">A simple timetable for today + your monthly progress.</p>
+<div class="card">
+<div class="section-title">🗓️ Today's Timetable</div>
+<div class="small" id="planIntro">NOVA turns your daily goal time into small, achievable actions.</div>
+<div id="dailyPlanList"></div>
+<div class="task-editor">
+ <div class="task-editor-title">➕ Build your own timetable</div>
+ <div class="small" style="margin-bottom:12px">Add any task, choose its duration, and set the clock time. Your custom tasks will stay saved for future days.</div>
+ <div class="task-form-grid">
+  <label class="task-field full">Task name
+   <input id="newTaskTitle" class="mini-input" type="text" maxlength="90" placeholder="e.g. IELTS Speaking" />
+  </label>
+  <label class="task-field">Start time
+   <input id="newTaskStart" class="mini-input" type="time" value="10:00" />
+  </label>
+  <label class="task-field">Duration (minutes)
+   <input id="newTaskMinutes" class="mini-input" type="number" min="5" max="720" step="5" value="60" />
+  </label>
+ </div>
+ <button class="primary" style="margin-top:12px" type="button" onclick="addPlanTask()">＋ Add task to timetable</button>
+ <div id="plannedMinutesSummary" class="task-total">Planned: 0 min</div>
+</div>
+<div class="info-row" style="margin-top:14px"><span>Daily goal time</span><strong id="dailyTimeDisplay">60 min</strong></div>
+<div style="display:flex;gap:8px;margin-top:10px"><button class="secondary" style="flex:1" onclick="changeDailyTime()">⏱ Change Time</button><button class="secondary" style="flex:1" onclick="editTimetable()">🗓 Edit Times</button></div>
+<button class="secondary" style="width:100%;margin-top:10px" onclick="rebuildDailyPlan(true)">🔄 Make Today's Plan</button>
+</div>
+<div class="card">
+<div class="section-title">🔥 Confidence & Streak</div>
+<div class="info-row"><span>Current streak</span><strong id="streakCount">0 days</strong></div>
+<div class="info-row"><span>This month completed</span><strong id="monthCompleted">0 days</strong></div>
+<div class="small">Every completed day is proof that you are moving forward. Missing a day does not erase your progress.</div>
+</div>
+<div class="card">
+<div class="section-title" id="calendarTitle">📈 Monthly Tracker</div>
+<div id="monthlyCalendar"></div>
+</div>
+<div class="card nova-says"><div class="nova-label">💡 NOVA Says</div><p id="plannerMessage">One completed day at a time. Your consistency builds confidence.</p></div>
+</section>
+
+<section id="profile" class="screen">
+<h1>Profile ⚙</h1><p class="subtitle">Your NOVA settings.</p>
+<div class="card">
+<div class="info-row"><span>Goal</span><strong>My Main Goal</strong></div>
+<div class="info-row"><span>Notifications</span><strong>On</strong></div>
+<div class="info-row"><span>Theme</span><strong>NOVA Dark</strong></div>
+<button class="primary" onclick="openOnboarding()">🧭 Setup / Update My Journey</button>
+</div>
+<div class="card nova-says"><div class="nova-label">💡 NOVA</div><p>NOVA guides you. You make the final decision.</p></div>
+</section>
+
+<div class="footer">NOVA • Discipline Today. Success Tomorrow.</div>
+</div>
+
+<nav class="bottom-nav">
+<button class="nav-btn active" onclick="showScreen('home',this)">🏠<br>Home</button>
+<button class="nav-btn" onclick="showScreen('goals',this)">🎯<br>Goals</button>
+<button class="nav-btn" onclick="showScreen('screenTime',this)">📱<br>Screen</button>
+<button class="nav-btn" onclick="showScreen('journey',this)">🪜<br>Journey</button>
+<button class="nav-btn" onclick="showScreen('focus',this)">🚀<br>Focus</button>
+<button class="nav-btn" onclick="showScreen('planner',this)">📅<br>Plan</button>
+</nav>
+
+<script>
+const NOVA_FIRST_RUN=!localStorage.getItem("novaOnboardingComplete")&&!localStorage.getItem("novaGoalSettings")&&!localStorage.getItem("novaTracker");
+let onboardingStep=0;
+let DAILY_TARGET=60;
+let SESSION_MINUTES=Math.max(1,Math.min(720,parseInt(localStorage.getItem("novaFocusMinutes")||"25",10)||25));
+let focusSeconds=SESSION_MINUTES*60,timerRunning=false,timerInterval=null;
+
+const usageData=JSON.parse(localStorage.getItem("novaUsage")||"null")||[
+ {app:"YouTube",minutes:20,type:"Learning"},
+ {app:"Chrome",minutes:15,type:"Goal Related"},
+ {app:"Instagram",minutes:10,type:"Social"}
+];
+function saveUsage(){localStorage.setItem("novaUsage",JSON.stringify(usageData))}
+function usageTotal(){return usageData.reduce((a,x)=>a+x.minutes,0)}
+function addUsage(){
+ const app=prompt("App name (example: YouTube)"); if(!app)return;
+ const min=parseInt(prompt("Minutes used today"),10); if(!Number.isFinite(min)||min<0)return;
+ const type=prompt("How does this app help you? Goal Related / Learning / Work / Entertainment / Social / Other","Entertainment")||"Other";
+ const existing=usageData.find(x=>x.app.toLowerCase()===app.toLowerCase());
+ if(existing){existing.minutes=min;existing.type=type}else usageData.push({app,minutes:min,type});
+ saveUsage();renderScreenTime();
+}
+function renderScreenTime(){
+ const total=usageTotal(); document.getElementById("screenTotal").textContent=total+" min";
+ const list=document.getElementById("usageList");
+ list.innerHTML=usageData.map(x=>`<div class="info-row"><span><strong>${x.app}</strong><br><small class="small">${x.type}</small></span><strong>${x.minutes} min</strong></div>`).join("");
+ const focused=usageData.filter(x=>["Goal Related","Learning","Work"].includes(x.type)).reduce((a,x)=>a+x.minutes,0);
+ const attention=total-focused;
+ document.getElementById("screenSummary").textContent=total?`${focused} min looks goal-supportive • ${attention} min needs your attention`:`Add your app usage to see NOVA's analysis.`;
+ const insight=document.getElementById("screenInsight");
+ if(total===0) insight.textContent="Start by adding today's app usage. NOVA will then suggest your next action.";
+ else if(currentMilestone() && tracker.dailyFocus<DAILY_TARGET && attention>focused) insight.textContent=`You have ${tracker.dailyFocus} min of today's focus completed. A lot of your tracked time is not directly supporting your goal. If you have time now, start a ${SESSION_MINUTES}-minute Focus session.`;
+ else if(currentMilestone() && tracker.dailyFocus<DAILY_TARGET) insight.textContent=`Your usage is reasonably balanced. You still have ${DAILY_TARGET-tracker.dailyFocus} min of today's goal target left. Keep your next step small.`;
+ else insight.textContent="Today's focus target is complete. You can stop here or continue if you choose.";
+}
+
+const defaultGoal={name:"Learn Web Development",why:"Better future",deadline:"31 December 2026",dailyMinutes:60};
+let goalSettings=JSON.parse(localStorage.getItem("novaGoalSettings")||"null")||defaultGoal;
+DAILY_TARGET=goalSettings.dailyMinutes;
+function saveGoalSettings(){localStorage.setItem("novaGoalSettings",JSON.stringify(goalSettings))}
+function renderGoalSettings(){
+ document.getElementById("homeGoalName").textContent=goalSettings.name;
+ document.getElementById("goalNameText").textContent=goalSettings.name;
+ document.getElementById("goalWhyText").textContent=goalSettings.why;
+ document.getElementById("goalDeadlineText").textContent=goalSettings.deadline;
+ document.getElementById("goalDailyTime").textContent=goalSettings.dailyMinutes+" minutes";
+}
+function editGoal(){
+ const name=prompt("What is your ONE main goal?",goalSettings.name); if(!name)return;
+ const why=prompt("Why is this goal important to you?",goalSettings.why); if(why===null)return;
+ const deadline=prompt("When do you want to achieve it?",goalSettings.deadline); if(deadline===null)return;
+ const mins=parseInt(prompt("How many minutes can you give this goal every day?",goalSettings.dailyMinutes),10);
+ if(!Number.isFinite(mins)||mins<1){alert("Please enter a valid number of minutes.");return;}
+ const newName=name.trim()||goalSettings.name;
+ const goalChanged=newName.toLowerCase()!==goalSettings.name.toLowerCase();
+ if(goalChanged){
+  const history=JSON.parse(localStorage.getItem("novaGoalHistory")||"[]");
+  history.push({...goalSettings,completedAt:new Date().toLocaleDateString(),progress:overallProgress()});
+  localStorage.setItem("novaGoalHistory",JSON.stringify(history));
+ }
+ goalSettings={name:newName,why:why.trim()||"Personal growth",deadline:deadline.trim()||"Not set",dailyMinutes:mins};
+ saveGoalSettings(); DAILY_TARGET=mins;
+ if(goalChanged){
+  tracker=buildRoadmap(goalSettings.name,goalSettings.why,goalSettings.deadline,goalSettings.dailyMinutes);
+  save(); renderGoalSettings(); renderAll();
+  alert("NOVA analysed your new goal and created a fresh step-by-step roadmap. 🧠🗺️");
+ }else{renderGoalSettings();renderAll();alert("NOVA updated your goal settings. 🎯");}
+}
+
+const defaultTracker={dailyFocus:0,milestones:[{name:"HTML Basics",minutes:60,done:0,detail:"Learn what HTML is, page structure, headings, links, images and forms.",action:"Study the basics and build one simple page."},{name:"CSS Basics",minutes:90,done:0,detail:"Learn selectors, colors, spacing, Flexbox and responsive layout.",action:"Build and style a small responsive page."},{name:"JavaScript",minutes:120,done:0,detail:"Learn variables, conditions, functions, arrays, DOM and events.",action:"Make one interactive web page."},{name:"Projects",minutes:180,done:0,detail:"Combine HTML, CSS and JavaScript in real projects.",action:"Build a useful project from start to finish."},{name:"Portfolio",minutes:120,done:0,detail:"Present your skills, projects and contact information professionally.",action:"Publish your first portfolio."}]};
+
+// NOVA GOAL INTELLIGENCE: a new user gets a beginner-friendly roadmap based on the goal, WHY, deadline and available time.
+function buildRoadmap(goal,why,deadline,dailyMinutes){
+ const g=(goal||"").toLowerCase().trim(), w=(why||"").toLowerCase();
+ let names=[];
+ if(/abroad|abroad study|foreign|overseas|study abroad|go abroad|move abroad|settle abroad|canada|australia|uk|usa|new zealand|germany/.test(g)){
+  names=[
+   ["1. Choose Country, Course & Path",90,"Decide whether your route is study, work or another legal pathway. Compare countries, courses, eligibility, costs and intake dates.","Shortlist 2–3 realistic country/course options."],
+   ["2. English Foundation & Communication",240,"Build grammar, vocabulary, pronunciation, listening, reading and everyday speaking from beginner level.","Start daily English speaking + listening practice."],
+   ["3. IELTS Preparation & Test",360,"Learn IELTS Listening, Reading, Writing and Speaking; practise question types; take mock tests and book the exam when ready.","Complete one IELTS skill practice session and track weak areas."],
+   ["4. Passport & Essential Documents",120,"Arrange passport and organise identity, education, marksheets, photographs and other required documents.","Make a document checklist and identify what is missing."],
+   ["5. Academic / Work Eligibility",240,"Check the exact entry requirements for the chosen course or job: education, marks, English score, experience and finances.","Write down every requirement and mark what you already have."],
+   ["6. Applications & Offers",300,"Prepare applications, SOP/personal statement if required, references and supporting documents; submit to suitable institutions/employers.","Prepare one application-ready profile."],
+   ["7. Finance, Visa & Health Requirements",300,"Understand tuition/living costs, proof of funds, insurance, medical or other requirements and the visa process for the selected country.","Create a realistic budget and official-requirements checklist."],
+   ["8. Travel & Arrival Plan",180,"After approval, plan tickets, accommodation, airport arrival, local transport, emergency contacts and first-week essentials.","Create a first-week arrival checklist."],
+   ["9. Goal Achieved: Start Your New Journey",120,"Complete the final pre-departure checklist and move into your study/work plan abroad.","Review every completed requirement before departure."]
+  ];
+ }else if(/engineer|engineering|b\.tech|btech|mechanical|mechatronic|mechatronics|electrical engineer|electronics engineer|civil engineer|computer engineer/.test(g)){
+  names=[
+   ["1. Understand Engineering & Choose Branch",120,"Learn what engineers do and compare branches such as Mechanical, Electrical, Electronics, Civil, Computer Science and Mechatronics.","Choose one branch based on your interests, eligibility and career goal."],
+   ["2. Check Eligibility & Education Path",150,"Check the education route needed for your target: 12th subjects, diploma/lateral entry, entrance exams, marks and college requirements.","Write your current qualification and the next qualification you need."],
+   ["3. Build Maths, Science & English Basics",240,"Strengthen the foundation needed for engineering: mathematics, physics/technical basics, English communication and problem solving.","Study one weak foundation topic every day."],
+   ["4. Prepare for Entrance / Admission",300,"Identify the relevant entrance or admission process, syllabus, deadlines, documents and college choices.","Make an admission checklist and study plan."],
+   ["5. Start Engineering Education",360,"Follow the chosen diploma/B.Tech/engineering curriculum and build strong fundamentals instead of only chasing marks.","Complete your current semester's next core topic."],
+   ["6. Learn Practical & Technical Skills",300,"Add branch-specific tools, software, lab skills, projects, communication and problem solving alongside college study.","Choose one practical skill and practise it weekly."],
+   ["7. Build Projects & Experience",360,"Turn knowledge into real projects, internships, industrial exposure and a portfolio of work.","Start one small project related to your engineering branch."],
+   ["8. Prepare for Job / Higher Study",300,"Build resume, interview skills, technical questions, aptitude and professional communication; explore jobs or higher-study options.","Create a first draft of your engineering resume."],
+   ["9. Engineer Career Goal",180,"Review your qualification, skills, projects and applications, then take the next career step.","Apply for one suitable opportunity or plan the next qualification."]
+  ];
+ }else if(/ielts|english test|english exam|band score|language test/.test(g)){
+  names=[["1. English Foundation",180,"Grammar, vocabulary, pronunciation and sentence building.","Practise basic English every day."],["2. Listening",240,"Understand accents, keywords, spelling and different question types.","Do one listening practice and review mistakes."],["3. Reading",240,"Skimming, scanning, vocabulary in context and IELTS question types.","Complete one passage and analyse every wrong answer."],["4. Writing Task 1 & Task 2",300,"Learn structure, ideas, grammar, coherence and timed writing.","Write one short answer and review errors."],["5. Speaking",240,"Build fluency, pronunciation, vocabulary and answers without memorising scripts.","Speak for 2 minutes on one topic and self-review."],["6. Full Mocks & Exam",300,"Take complete mocks, analyse weak areas and book the test when your performance is ready.","Take a timed mock and record your score." ]];
+ }else if(/web developer|web development|website|frontend|front end|html|css|javascript/.test(g)){
+  names=[["1. HTML Basics",120,"Learn page structure, text, links, images, forms and semantic HTML.","Build one simple page."],["2. CSS Basics",180,"Learn selectors, spacing, Flexbox, Grid and responsive design.","Style your page for mobile and desktop."],["3. JavaScript Fundamentals",240,"Learn variables, conditions, functions, arrays, DOM and events.","Build one interactive feature."],["4. Responsive Web Design",180,"Make websites usable across phones, tablets and computers.","Make one project responsive."],["5. Real Projects",300,"Build projects that solve real problems and show your skills.","Finish one project from idea to working version."],["6. Portfolio & Job Skills",240,"Create a portfolio, Git/GitHub basics, resume and interview preparation.","Publish your first portfolio project."]];
+ }else if(/sap|fico|accounting|finance/.test(g)){
+  names=[["1. SAP & ERP Fundamentals",120,"Understand ERP, SAP, modules, company structure and business processes.","Learn the basic SAP terminology."],["2. Accounting Foundation",180,"Learn journal, ledger, debit/credit, balance sheet, P&L and basic accounting concepts.","Practise core accounting entries."],["3. SAP FICO Structure",240,"Understand FI and CO, organisational elements and how financial data flows.","Map one simple business process in SAP."],["4. Core FICO Processes",300,"Learn common configuration and user processes such as GL, AP, AR, assets and controlling basics.","Practise one complete process."],["5. Hands-on Practice",300,"Work through realistic scenarios and reports while learning how transactions connect.","Complete one guided practice case."],["6. Projects & Interview Preparation",240,"Build confidence with scenarios, resume points and interview questions.","Prepare and explain one end-to-end FICO process."]];
+ }else if(/steno|stenography|shorthand/.test(g)){
+  names=[["1. English Foundation",150,"Grammar, vocabulary and spelling for accurate dictation and office communication.","Study and use new vocabulary daily."],["2. Shorthand Basics",240,"Learn shorthand principles, outlines and common forms.","Practise a small set of outlines."],["3. Speed Building",300,"Increase shorthand speed gradually while keeping accuracy.","Do a short timed dictation."],["4. Dictation Practice",300,"Practise different passages and improve listening-to-writing accuracy.","Review every error after dictation."],["5. Typing Accuracy & Speed",240,"Build clean, accurate transcription skills.","Complete one timed typing practice."],["6. Mock Tests & Revision",300,"Simulate the exam and revise weak areas.","Take one mock and record your errors."]];
+ }else if(/coding|programming|python|java|software/.test(g)){
+  names=[["1. Programming Fundamentals",150,"Learn logic, variables, conditions, loops and functions.","Solve 5 small logic problems."],["2. Core Syntax & Logic",210,"Build confidence with the chosen language and debugging.","Write and debug one small program."],["3. Data Structures Basics",240,"Learn arrays, objects/lists, stacks, queues and basic algorithms.","Practise one data-structure problem."],["4. Problem Solving",240,"Turn requirements into steps and code solutions.","Solve one problem without copying the solution."],["5. Projects",300,"Build real projects that combine your skills.","Finish a small useful project."],["6. Portfolio & Interview",240,"Document projects and prepare for technical interviews.","Explain one project clearly from problem to solution."]];
+ }else if(/exam|preparation|study|competitive|ssc|cat|board/.test(g)){
+  names=[["1. Understand Syllabus & Exam Pattern",120,"List subjects, sections, marks, timing and important dates.","Create your syllabus checklist."],["2. Build Core Concepts",240,"Learn concepts topic by topic before focusing heavily on speed.","Finish one core topic."],["3. Topic-wise Practice",300,"Practise questions and record repeated mistakes.","Complete one practice set and review it."],["4. Revision & Weak Areas",240,"Use error tracking to focus on topics that need improvement.","Revise your weakest topic today."],["5. Mock Tests",300,"Practise under realistic time limits and analyse performance.","Take one timed section or mock."],["6. Final Revision",180,"Revise formulas, facts, strategies and common errors.","Make a final quick-revision list."]];
+ }else{
+  names=[["1. Understand the Goal",120,"Define exactly what success means, what you need to learn or obtain, and what you already have.","Write the first clear definition of success."],["2. Learn the Foundations",180,"Learn the basic knowledge and skills a complete beginner needs before moving forward.","Start the first foundation topic."],["3. Build the Required Skills",240,"Practise the core skills needed for the goal and track what you can actually do.","Practise one core skill today."],["4. Real-world Practice",300,"Use your knowledge in practical tasks, projects, applications or real situations.","Complete one small real-world task."],["5. Review, Fix & Improve",240,"Find gaps, correct mistakes and strengthen weak areas.","Review your last work and fix one weakness."],["6. Final Achievement",240,"Complete the final requirements and verify that the goal is genuinely achieved.","List the final requirements and start the first one."]];
+ }
+ const total=names.reduce((a,x)=>a+x[1],0);
+ const daily=Math.max(1,Number(dailyMinutes)||60);
+ const days=Math.ceil(total/daily);
+ return {dailyFocus:0,lastDate:new Date().toISOString().slice(0,10),milestones:names.map(x=>({name:x[0],minutes:x[1],done:0,detail:x[2],action:x[3]})),meta:{goal,why:why||"",deadline:deadline||"Not set",dailyMinutes:daily,estimatedDays:days,totalMinutes:total}};
+}
+
+let tracker=JSON.parse(localStorage.getItem("novaTracker")||"null")||buildRoadmap("Learn Web Development");
+const todayKey=new Date().toISOString().slice(0,10);
+if(tracker.lastDate!==todayKey){tracker.dailyFocus=0;tracker.lastDate=todayKey;save();}
+
+function save(){localStorage.setItem("novaTracker",JSON.stringify(tracker))}
+const PLAN_KEY="novaDailyPlan";
+const PLAN_TEMPLATE_KEY="novaDailyPlanTemplate";
+const HISTORY_KEY="novaDailyHistory";
+function dateKey(d=new Date()){return d.toISOString().slice(0,10)}
+function getHistory(){return JSON.parse(localStorage.getItem(HISTORY_KEY)||"{}");}
+function saveHistory(h){localStorage.setItem(HISTORY_KEY,JSON.stringify(h));}
+function recordTodayProgress(){
+ const h=getHistory(),k=dateKey();
+ h[k]={focus:tracker.dailyFocus,target:DAILY_TARGET,completed:tracker.dailyFocus>=DAILY_TARGET};
+ saveHistory(h);
+}
+function changeDailyTime(){
+ const mins=parseInt(prompt("How many minutes can you give your goal every day? (e.g. 240 for 4 hours)",DAILY_TARGET),10);
+ if(!Number.isFinite(mins)||mins<5){alert("Please enter at least 5 minutes.");return;}
+ goalSettings.dailyMinutes=mins; DAILY_TARGET=mins; saveGoalSettings();
+ // Keep the tasks the user has already created; changing the target must not erase their timetable.
+ recordTodayProgress(); renderAll();
+ const total=getPlan().items.reduce((sum,item)=>sum+(Number(item.minutes)||0),0);
+ alert("Daily target saved: "+mins+" minutes ("+(mins/60).toFixed(mins%60?1:0)+" hours). Your existing timetable was kept."+(total!==mins?" Your tasks currently add up to "+total+" minutes; you can edit them below.":""));
+}
+function savePlan(p){
+ p.date=dateKey();
+ localStorage.setItem(PLAN_KEY,JSON.stringify(p));
+ // Save a reusable daily template without carrying yesterday's completion marks forward.
+ const template={items:p.items.map(item=>({...item,done:false}))};
+ localStorage.setItem(PLAN_TEMPLATE_KEY,JSON.stringify(template));
+}
+function validClock(value){return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value||""));}
+function clockMinutes(value){if(!validClock(value))return 600;const parts=value.split(":").map(Number);return parts[0]*60+parts[1];}
+function clockLabel(start,minutes){
+ const from=clockMinutes(start),to=(from+Math.max(0,Number(minutes)||0))%(24*60);
+ const fmt=n=>String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0");
+ return fmt(from)+"–"+fmt(to);
+}
+function escapePlanText(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;", "'":"&#39;"}[ch]));}
+function editTimetable(){
+ const p=getPlan();
+ for(let i=0;i<p.items.length;i++){
+  const item=p.items[i]; if(item.done)continue;
+  const value=prompt("Start time for task: "+item.title+" (24-hour format, e.g. 10:00)",item.start||"10:00");
+  if(value===null)break;
+  if(!validClock(value.trim())){alert("Please use 24-hour time like 10:00 or 14:30.");return;}
+  item.start=value.trim(); item.time=item.start;
+ }
+ savePlan(p);renderAll();
+}
+function addPlanTask(){
+ const title=document.getElementById("newTaskTitle").value.trim();
+ const start=document.getElementById("newTaskStart").value;
+ const minutes=parseInt(document.getElementById("newTaskMinutes").value,10);
+ if(!title){alert("Please enter a task name, e.g. IELTS Speaking.");document.getElementById("newTaskTitle").focus();return;}
+ if(!validClock(start)){alert("Please choose a valid start time.");return;}
+ if(!Number.isFinite(minutes)||minutes<5||minutes>720){alert("Please enter a duration from 5 to 720 minutes.");return;}
+ const p=getPlan();p.items.push({title,start,time:start,minutes,done:false});
+ savePlan(p);document.getElementById("newTaskTitle").value="";
+ // Suggest the next start time after the task just added.
+ const next=(clockMinutes(start)+minutes)%(24*60);
+ document.getElementById("newTaskStart").value=String(Math.floor(next/60)).padStart(2,"0")+":"+String(next%60).padStart(2,"0");
+ renderAll();
+}
+function editPlanTask(i){
+ const p=getPlan(),item=p.items[i];if(!item)return;
+ if(item.done){alert("Please press Undo before editing a completed task.");return;}
+ const title=prompt("Task name",item.title);if(title===null)return;
+ const start=prompt("Start time (24-hour format, e.g. 10:00)",item.start||"10:00");if(start===null)return;
+ const mins=prompt("Duration in minutes",String(item.minutes));if(mins===null)return;
+ const duration=parseInt(mins,10);
+ if(!title.trim()){alert("Task name cannot be empty.");return;}
+ if(!validClock(start.trim())){alert("Please use 24-hour time like 10:00 or 14:30.");return;}
+ if(!Number.isFinite(duration)||duration<5||duration>720){alert("Duration must be between 5 and 720 minutes.");return;}
+ item.title=title.trim();item.start=start.trim();item.time=item.start;item.minutes=duration;
+ savePlan(p);renderAll();
+}
+function deletePlanTask(i){
+ const p=getPlan(),item=p.items[i];if(!item)return;
+ if(item.done){alert("Please press Undo before deleting a completed task, so its progress can be corrected safely.");return;}
+ if(!confirm("Delete this task from your timetable?\n\n"+item.title))return;
+ p.items.splice(i,1);savePlan(p);renderAll();
+}
+function rebuildDailyPlan(force=false){
+ const p=getPlan();
+ if(!p.items.length){p.items=suggestedPlan().items;}
+ else if(!confirm("Reset today's task checkmarks? Your task names and times will stay the same."))return;
+ p.items.forEach(item=>item.done=false);savePlan(p);renderAll();
+ if(force)alert("Today's checklist has been reset. Your custom timetable is still saved. 📅");
+}
+function togglePlanItem(i){
+ const p=getPlan(); if(!p.items[i])return;
+ const item=p.items[i];
+ if(item.done){
+   item.done=false;
+   tracker.dailyFocus=Math.max(0,tracker.dailyFocus-item.minutes);
+   let left=item.minutes;
+   for(let j=tracker.milestones.length-1;j>=0 && left>0;j--){
+     const m=tracker.milestones[j], removable=Math.min(m.done,left); m.done-=removable; left-=removable;
+   }
+ }else{
+   item.done=true;
+   addTaskProgress(item.minutes);
+ }
+ savePlan(p); save(); recordTodayProgress(); renderAll();
+}
+function addTaskProgress(minutes){
+ let left=Math.max(0,Number(minutes)||0);
+ while(left>0){
+   const m=currentMilestone(); if(!m)break;
+   const need=Math.max(0,m.minutes-m.done);
+   const used=Math.min(left,need); m.done+=used; left-=used;
+ }
+ tracker.dailyFocus=Math.min(DAILY_TARGET,tracker.dailyFocus+Number(minutes||0));
+ save(); recordTodayProgress();
+}
+function suggestedPlan(){
+ const total=Math.max(15,Number(DAILY_TARGET)||60), items=[];
+ if(total<=25){items.push({time:"Your focus time",title:tracker.currentTask||"Learn & practise",minutes:total,done:false});}
+ else {
+   const learn=Math.round(total*.5), practice=Math.round(total*.33), review=Math.max(5,total-learn-practice);
+   const m=currentMilestone();
+   items.push({time:"Morning",title:"Learn: "+(m?m.name:"next milestone"),minutes:learn,done:false});
+   items.push({time:"Main free time",title:"Practice: "+(m?m.action:"apply what you learned"),minutes:practice,done:false});
+   items.push({time:"Night review",title:"Review & plan tomorrow",minutes:review,done:false});
+ }
+ return {date:dateKey(),items};
+}
+function getPlan(){
+ let p=JSON.parse(localStorage.getItem(PLAN_KEY)||"null");
+ if(!p||!Array.isArray(p.items)) p=suggestedPlan();
+ if(p.date!==dateKey()){
+  const template=JSON.parse(localStorage.getItem(PLAN_TEMPLATE_KEY)||"null");
+  p={date:dateKey(),items:Array.isArray(template?.items)&&template.items.length?template.items.map(item=>({...item,done:false})):suggestedPlan().items};
+  localStorage.setItem(PLAN_KEY,JSON.stringify(p));
+ }
+ // Convert older timetable entries to editable clock slots without losing task names or durations.
+ let cursor=600;
+ p.items=p.items.map(item=>{
+  const minutes=Math.max(5,Number(item.minutes)||30);
+  const start=validClock(item.start)?item.start:(validClock(item.time)?item.time:(String(Math.floor(cursor/60)%24).padStart(2,"0")+":"+String(cursor%60).padStart(2,"0")));
+  cursor=(clockMinutes(start)+minutes)%(24*60);
+  return {...item,title:item.title||"Study task",minutes,start,time:start,done:Boolean(item.done)};
+ });
+ savePlan(p);
+ return p;
+}
+function rebuildDailyPlan(force=false){
+ const p=suggestedPlan(); localStorage.setItem(PLAN_KEY,JSON.stringify(p)); renderPlanner();
+ if(force) alert("NOVA created a fresh timetable for today. 📅🚀");
+}
+function togglePlanItem(i){
+ const p=getPlan(); if(!p.items[i])return;
+ const item=p.items[i];
+ if(item.done){
+   item.done=false;
+   tracker.dailyFocus=Math.max(0,tracker.dailyFocus-item.minutes);
+   let left=item.minutes;
+   for(let j=tracker.milestones.length-1;j>=0 && left>0;j--){
+     const m=tracker.milestones[j], removable=Math.min(m.done,left); m.done-=removable; left-=removable;
+   }
+ }else{
+   item.done=true;
+   addTaskProgress(item.minutes);
+ }
+ localStorage.setItem(PLAN_KEY,JSON.stringify(p)); save(); recordTodayProgress(); renderAll();
+}
+function calcStreak(){
+ const h=getHistory(), d=new Date();
+ if(!h[dateKey(d)]?.completed) d.setDate(d.getDate()-1);
+ let n=0;
+ while(h[dateKey(d)]?.completed){n++;d.setDate(d.getDate()-1);}
+ return n;
+}
+function renderPlanner(){
+ const p=getPlan(), list=document.getElementById("dailyPlanList"); if(!list)return;
+ document.getElementById("planIntro").textContent=`Today: ${tracker.dailyFocus}/${DAILY_TARGET} minutes toward ${goalSettings.name}. Small actions are easier to finish.`;
+ document.getElementById("dailyTimeDisplay").textContent=DAILY_TARGET+" min";
+ const plannedTotal=p.items.reduce((sum,item)=>sum+(Number(item.minutes)||0),0);
+ document.getElementById("plannedMinutesSummary").textContent="Planned: "+plannedTotal+" min ("+(plannedTotal/60).toFixed(plannedTotal%60?1:0)+" hours) • Daily target: "+DAILY_TARGET+" min";
+ list.innerHTML=p.items.length?p.items.map((x,i)=>`<div class="plan-item ${x.done?'done':''}"><div class="plan-time">${escapePlanText(clockLabel(x.start,x.minutes))}<br><span class="small">${Number(x.minutes)} min</span></div><div style="flex:1;min-width:0"><div class="plan-title"><span class="plan-check">${x.done?'✅':'⬜'}</span> ${escapePlanText(x.title)}</div><div class="task-actions"><button class="secondary" type="button" onclick="togglePlanItem(${i})">${x.done?'Undo':'Mark Done'}</button><button class="secondary" type="button" onclick="editPlanTask(${i})">✏️ Edit</button><button class="secondary" type="button" onclick="deletePlanTask(${i})">🗑 Delete</button></div></div></div>`).join(""):'<div class="small" style="padding:12px 0">No tasks yet. Add your first task below.</div>';
+ const h=getHistory(), now=new Date(), y=now.getFullYear(), mo=now.getMonth(), first=new Date(y,mo,1), last=new Date(y,mo+1,0), start=first.getDay(), days=last.getDate();
+ document.getElementById("calendarTitle").textContent=`📈 ${now.toLocaleString('en-US',{month:'long'})} ${y} • Monthly Tracker`;
+ let cal='<div class="calendar">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>`<div class="cal-head">${x}</div>`).join('');
+ for(let i=0;i<start;i++)cal+='<div class="cal-day empty"></div>';
+ let completed=0;
+ for(let day=1;day<=days;day++){const k=dateKey(new Date(y,mo,day)),r=h[k];let cls='cal-day';if(k===dateKey())cls+=' today';if(r?.completed){cls+=' done';completed++;}else if(r?.focus>0)cls+=' partial';cal+=`<div class="${cls}"><div class="day-num">${day}</div><div class="day-mark">${r?.completed?'✓':r?.focus>0?'•':''}</div></div>`;}
+ cal+='</div>';document.getElementById("monthlyCalendar").innerHTML=cal;
+ document.getElementById("streakCount").textContent=calcStreak()+" days";
+ document.getElementById("monthCompleted").textContent=completed+" days";
+ document.getElementById("plannerMessage").textContent=tracker.dailyFocus>=DAILY_TARGET?"Today's target is complete. You earned today's check mark. Keep this feeling—one day at a time.":`You have ${Math.max(0,DAILY_TARGET-tracker.dailyFocus)} min left today. Complete the next small block, not the whole journey.`;
+}
+
+function currentIndex(){return tracker.milestones.findIndex(m=>m.done<m.minutes)===-1?tracker.milestones.length:tracker.milestones.findIndex(m=>m.done<m.minutes)}
+function currentMilestone(){const i=currentIndex();return i<tracker.milestones.length?tracker.milestones[i]:null}
+function overallProgress(){
+ const total=tracker.milestones.reduce((a,m)=>a+m.minutes,0);
+ const done=tracker.milestones.reduce((a,m)=>a+Math.min(m.done,m.minutes),0);
+ return Math.round(done/total*100);
+}
+
+function addProgress(minutes){
+ const m=currentMilestone();if(!m)return;
+ m.done=Math.min(m.minutes,m.done+minutes);
+ tracker.dailyFocus=Math.min(DAILY_TARGET,tracker.dailyFocus+minutes);
+ save();recordTodayProgress();renderAll();
+}
+
+function renderDailyAnalysis(){
+ const el=document.getElementById("dailyAnalysis");
+ if(!el)return;
+ const m=currentMilestone();
+ const remaining=Math.max(0,DAILY_TARGET-tracker.dailyFocus);
+ const total=usageTotal();
+ const supportive=usageData.filter(x=>["Goal Related","Learning","Work"].includes(x.type)).reduce((a,x)=>a+x.minutes,0);
+ const attention=Math.max(0,total-supportive);
+ document.getElementById("analysisGoalChip").textContent=m?"🎯 "+m.name:"🏆 Goal Achieved";
+ document.getElementById("analysisTargetChip").textContent=m?(remaining+" min target left"):"Target complete";
+ document.getElementById("analysisActivityChip").textContent=total?(supportive+" min goal-supportive"):"No usage added";
+ if(!m){
+  el.textContent="Your main goal is complete. NOVA recommends reviewing your journey and choosing your next goal.";
+  document.getElementById("analysisAction").textContent="🏆 View Journey";
+ }else if(tracker.dailyFocus>=DAILY_TARGET){
+  el.textContent="Today's target is complete. You have taken the action NOVA planned for today. You can stop or continue by choice.";
+  document.getElementById("analysisAction").textContent="🪜 View Journey";
+ }else if(total>0 && attention>supportive){
+  el.textContent="Your tracked usage has more time needing attention than goal-supportive time. You still have "+remaining+" minutes left for today's goal. Start one focused session now.";
+  document.getElementById("analysisAction").textContent="🚀 Start Focus";
+ }else{
+  el.textContent="You have "+remaining+" minutes left for today's goal. NOVA's recommendation is simple: take the next small step on "+m.name+".";
+  document.getElementById("analysisAction").textContent="🚀 Start Focus";
+ }
+}
+
+function renderAll(){
+ const p=overallProgress(),m=currentMilestone();
+ const dailyDone=Math.max(0,Math.min(tracker.dailyFocus,DAILY_TARGET));
+ const dailyPct=DAILY_TARGET>0?Math.round(dailyDone/DAILY_TARGET*100):0;
+ document.getElementById("dailyTargetProgressLabel").textContent=dailyDone+" / "+DAILY_TARGET+" min";
+ document.getElementById("dailyTargetProgress").style.width=dailyPct+"%";
+ document.getElementById("homeProgress").style.width=p+"%";
+ document.getElementById("progressText").textContent=p+"% completed";
+ document.getElementById("focusDone").textContent=tracker.dailyFocus+" min";
+ document.getElementById("homeDailyTime").textContent=DAILY_TARGET+" min";
+
+ if(!m){
+  document.getElementById("todayTarget").textContent="Goal Achieved 🎉";
+  document.getElementById("currentMilestoneHome").textContent="Completed";
+  document.getElementById("targetStatus").textContent="You completed your main goal.";
+  document.getElementById("milestoneProgressLabel").textContent="Completed";
+  document.getElementById("milestoneTargetProgress").style.width="100%";
+  document.getElementById("smartTargetTip").textContent="🏆 Main goal completed! Review your Journey to see your progress.";
+  document.getElementById("homeAction").textContent="🏆 View Journey";
+  document.getElementById("novaMessage").textContent="Goal achieved! You finished your journey. Your next goal can be chosen now.";
+  document.getElementById("focusTarget").textContent="Goal Achieved";
+ }else{
+  const remaining=m.minutes-m.done;
+  const dailyRemaining=Math.max(0,DAILY_TARGET-tracker.dailyFocus);
+  const suggested=Math.max(0,Math.min(30,remaining,dailyRemaining));
+  const milestonePct=Math.round(Math.min(m.done,m.minutes)/m.minutes*100);
+  document.getElementById("todayTarget").textContent=m.name;
+  document.getElementById("currentMilestoneHome").textContent=m.name;
+  document.getElementById("focusTarget").textContent=m.name;
+  document.getElementById("targetStatus").textContent=remaining+" min left in this milestone • "+dailyRemaining+" min left in today's target.";
+  document.getElementById("milestoneProgressLabel").textContent=Math.min(m.done,m.minutes)+" / "+m.minutes+" min";
+  document.getElementById("milestoneTargetProgress").style.width=milestonePct+"%";
+  document.getElementById("smartTargetTip").textContent=dailyRemaining===0?"✅ Daily target complete. You can stop or continue by choice.":"💡 NOVA suggests a small next step: "+suggested+" minutes. Your Focus Timer stays under your control.";
+  document.getElementById("homeAction").textContent="🚀 Start Focus";
+  document.getElementById("novaMessage").textContent=tracker.dailyFocus>=DAILY_TARGET?
+   "Today's target is complete. You took one more step. You can stop here or continue if you choose.":
+   "Your next step is "+m.name+". You have "+(DAILY_TARGET-tracker.dailyFocus)+" minutes left today. Start the next small action: "+(m.action||"begin the current step.");
+ }
+ renderJourney();renderGoals();renderScreenTime();renderDailyAnalysis();renderPlanner();
+}
+
+function renderJourney(){
+ const box=document.getElementById("journeyList"),i=currentIndex();
+ const person=document.getElementById("journeyPerson"),label=document.getElementById("journeyVisualLabel");
+ const visualIndex=i===tracker.milestones.length?5:i;
+ person.style.left=(18+visualIndex*12)+"%"; person.style.bottom=(44+visualIndex*34)+"px";
+ label.textContent=i===tracker.milestones.length?"GOAL ACHIEVED":("NEXT: "+tracker.milestones[i].name).toUpperCase();
+ box.innerHTML=tracker.milestones.map((m,index)=>{
+  const pct=Math.round(m.done/m.minutes*100),done=m.done>=m.minutes,current=index===i&&!done;
+  return `<div class="step ${done?"done":current?"current":""}">
+   <div class="step-number">${done?"✓":index+1}</div>
+   <div style="flex:1"><div class="step-name">${m.name}</div>
+   <div class="step-status">${done?"Completed":current?"Current milestone":"Upcoming"}</div>
+   <div class="milestone-detail">${m.detail||"Complete this step to move forward."}</div>
+   <div class="milestone-action">👉 ${m.action||"Take the next small action."}</div>
+   <div class="mini-progress"><div class="mini-fill" style="width:${pct}%"></div></div>
+   <div class="milestone-percent">${pct}% • ${m.done}/${m.minutes} min</div></div>
+  </div>`;
+ }).join("");
+ document.getElementById("journeyBottom").innerHTML=i===tracker.milestones.length?
+ "🏆 <strong>GOAL ACHIEVED!</strong><p class='small' style='margin-top:8px'>You reached the top of your NOVA Journey.</p>":
+ "🪜 <strong>KEEP GOING</strong><p class='small' style='margin-top:8px'>Your next step is "+tracker.milestones[i].name+".</p>";
+}
+
+function renderGoals(){
+ document.getElementById("goalMilestones").innerHTML="<div class='section-title'>📊 Milestone Tracker</div>"+
+ tracker.milestones.map(m=>{
+  const pct=Math.round(m.done/m.minutes*100);
+  return `<div style="margin:18px 0"><div style="display:flex;justify-content:space-between;gap:10px"><strong>${m.name}</strong><span class="badge">${pct}%</span></div>
+  <div class="mini-progress"><div class="mini-fill" style="width:${pct}%"></div></div>
+  <div class="milestone-percent">${m.done}/${m.minutes} minutes completed</div><div class="milestone-detail">${m.detail||""}</div><div class="milestone-action">👉 ${m.action||"Take the next small action."}</div></div>`;
+ }).join("");
+}
+
+function showScreen(name,button){
+ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+ document.getElementById(name).classList.add("active");
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+ if(button)button.classList.add("active");
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function startNextAction(){currentMilestone()?showScreen("focus"):showScreen("journey")}
+
+function updateTimer(){
+ const m=Math.floor(focusSeconds/60),s=focusSeconds%60;
+ document.getElementById("timer").textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+}
+function applyFocusDuration(){
+ if(timerRunning){alert("Please pause the timer before changing the focus time.");return;}
+ const field=document.getElementById("focusMinutesInput");
+ const minutes=parseInt(field.value,10);
+ if(!Number.isFinite(minutes)||minutes<1||minutes>720){alert("Enter a time between 1 and 720 minutes.");field.focus();return;}
+ SESSION_MINUTES=minutes;
+ localStorage.setItem("novaFocusMinutes",String(SESSION_MINUTES));
+ focusSeconds=SESSION_MINUTES*60;
+ updateTimer();
+ document.getElementById("timerButton").textContent="▶ Start";
+ document.getElementById("focusDurationHint").textContent="Focus session set to "+SESSION_MINUTES+" minute"+(SESSION_MINUTES===1?".":"s.");
+}
+function toggleTimer(){
+ if(timerRunning){clearInterval(timerInterval);timerRunning=false;document.getElementById("timerButton").textContent="▶ Resume";return}
+ timerRunning=true;document.getElementById("timerButton").textContent="⏸ Pause";
+ timerInterval=setInterval(()=>{if(focusSeconds>0){focusSeconds--;updateTimer()}else completeFocus()},1000);
+}
+function resetTimer(){
+ clearInterval(timerInterval);timerRunning=false;focusSeconds=SESSION_MINUTES*60;updateTimer();document.getElementById("timerButton").textContent="▶ Start";
+}
+function confirmSession(){
+ if(!currentMilestone()){alert("Your main goal is already complete! 🎉");return}
+ if(confirm("Confirm that you completed this "+SESSION_MINUTES+"-minute focus session?"))completeFocus();
+}
+function completeFocus(){
+ clearInterval(timerInterval);timerRunning=false;
+ const before=currentMilestone()?.name;
+ addProgress(SESSION_MINUTES);
+ focusSeconds=SESSION_MINUTES*60;updateTimer();document.getElementById("timerButton").textContent="▶ Start";
+ const after=currentMilestone();
+ if(!after){
+  document.getElementById("focusMessage").textContent="Goal achieved! Your full NOVA Journey is complete. 🎉";
+  alert("Goal achieved! 🎉\n\nYou completed your NOVA Journey.");
+ }else if(before!==after.name){
+  document.getElementById("focusMessage").textContent="Milestone complete! Your next step is "+after.name+".";
+  alert("Milestone complete! 🚀\n\nNext step: "+after.name);
+ }else{
+  document.getElementById("focusMessage").textContent="Great work! "+before+" progress has been updated.";
+ }
+}
+
+function formatDeadlineForStorage(value){
+ if(!value)return "Not set";
+ const parts=value.split("-").map(Number);
+ if(parts.length!==3||parts.some(n=>!Number.isFinite(n)))return value;
+ const d=new Date(parts[0],parts[1]-1,parts[2]);
+ return d.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+}
+function deadlineForInput(value){
+ if(!value||value==="Not set")return "";
+ const iso=String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+ if(iso)return value;
+ const d=new Date(value);
+ if(Number.isNaN(d.getTime()))return "";
+ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function openOnboarding(){
+ document.getElementById("onboardingGoal").value=goalSettings.name||"";
+ document.getElementById("onboardingWhy").value=goalSettings.why||"";
+ document.getElementById("onboardingDeadline").value=deadlineForInput(goalSettings.deadline)||"2026-12-31";
+ document.getElementById("onboardingDailyMinutes").value=goalSettings.dailyMinutes||60;
+ onboardingStep=0;
+ document.getElementById("onboardingOverlay").classList.remove("hidden");
+ renderOnboardingStep();
+}
+function renderOnboardingStep(){
+ document.querySelectorAll(".onboarding-step").forEach((el,i)=>el.classList.toggle("active",i===onboardingStep));
+ document.getElementById("onboardingProgressFill").style.width=(onboardingStep===0?0:(onboardingStep/3)*100)+"%";
+ const nav=document.getElementById("onboardingNav");
+ nav.style.display=onboardingStep===1||onboardingStep===2?"flex":"none";
+ document.getElementById("onboardingNextButton").textContent=onboardingStep===2?"Next →":"Next →";
+}
+function nextOnboardingStep(){
+ if(onboardingStep===1&&!document.getElementById("onboardingGoal").value.trim()){alert("Please enter your main goal first.");document.getElementById("onboardingGoal").focus();return;}
+ if(onboardingStep===2){
+  if(!document.getElementById("onboardingWhy").value.trim()){alert("Please enter why this goal matters to you.");document.getElementById("onboardingWhy").focus();return;}
+  if(!document.getElementById("onboardingDeadline").value){alert("Please choose a target date.");document.getElementById("onboardingDeadline").focus();return;}
+ }
+ if(onboardingStep<3){onboardingStep++;renderOnboardingStep();}
+}
+function previousOnboardingStep(){if(onboardingStep>0){onboardingStep--;renderOnboardingStep();}}
+function completeOnboarding(){
+ const name=document.getElementById("onboardingGoal").value.trim();
+ const why=document.getElementById("onboardingWhy").value.trim();
+ const deadlineValue=document.getElementById("onboardingDeadline").value;
+ const mins=parseInt(document.getElementById("onboardingDailyMinutes").value,10);
+ if(!name){onboardingStep=1;renderOnboardingStep();alert("Please enter your main goal.");return;}
+ if(!why){onboardingStep=2;renderOnboardingStep();alert("Please enter why this goal matters to you.");return;}
+ if(!deadlineValue){onboardingStep=2;renderOnboardingStep();alert("Please choose a target date.");return;}
+ if(!Number.isFinite(mins)||mins<5||mins>1440){alert("Enter daily time between 5 and 1440 minutes.");return;}
+ const deadline=formatDeadlineForStorage(deadlineValue);
+ const changed=name.toLowerCase()!==String(goalSettings.name||"").toLowerCase();
+ const hadSavedGoal=Boolean(localStorage.getItem("novaGoalSettings"));
+ if(changed&&hadSavedGoal){
+  const history=JSON.parse(localStorage.getItem("novaGoalHistory")||"[]");
+  history.push({...goalSettings,completedAt:new Date().toLocaleDateString(),progress:overallProgress()});
+  localStorage.setItem("novaGoalHistory",JSON.stringify(history));
+ }
+ goalSettings={name,why,deadline,dailyMinutes:mins};
+ DAILY_TARGET=mins;
+ saveGoalSettings();
+ if(changed||NOVA_FIRST_RUN||!tracker||!Array.isArray(tracker.milestones)||!tracker.milestones.length){
+  tracker=buildRoadmap(name,why,deadline,mins);
+  save();
+ }else{
+  tracker.meta={...(tracker.meta||{}),goal:name,why,deadline,dailyMinutes:mins};
+  save();
+ }
+ localStorage.setItem("novaOnboardingComplete","true");
+ // Preserve existing custom timetable when updating setup; create a starter plan only if none exists or the goal changed.
+ const existingPlan=JSON.parse(localStorage.getItem(PLAN_KEY)||"null");
+ if(changed||!existingPlan||!Array.isArray(existingPlan.items)||!existingPlan.items.length){
+  const plan=suggestedPlan();
+  localStorage.setItem(PLAN_KEY,JSON.stringify(plan));
+  localStorage.setItem(PLAN_TEMPLATE_KEY,JSON.stringify({items:plan.items.map(item=>({...item,done:false}))}));
+ }
+ document.getElementById("onboardingOverlay").classList.add("hidden");
+ renderGoalSettings();recordTodayProgress();renderAll();
+ if(changed&&hadSavedGoal)alert("Your main goal changed. NOVA created a fresh roadmap for your new goal. 🚀");
+ else alert("Your NOVA journey is ready. Let's take the first step! 🚀");
+ showScreen("home",document.querySelector('.nav-btn'));
+}
+
+function greeting(){
+ const h=new Date().getHours();
+ document.getElementById("greeting").textContent=(h<12?"Good Morning":h<18?"Good Afternoon":"Good Evening")+" 👋";
+}
+greeting();renderGoalSettings();recordTodayProgress();document.getElementById("focusMinutesInput").value=SESSION_MINUTES;document.getElementById("focusDurationHint").textContent="Focus session set to "+SESSION_MINUTES+" minute"+(SESSION_MINUTES===1?".":"s.");updateTimer();renderAll();if(NOVA_FIRST_RUN)openOnboarding();
+</script>
+
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => console.warn('NOVA offline setup could not start:', err));
+  });
+}
+</script>
+</body>
+</html>

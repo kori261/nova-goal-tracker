@@ -1,0 +1,30 @@
+{
+  "id": "./",
+  "name": "NOVA \u2014 Goal Tracker",
+  "short_name": "NOVA",
+  "description": "Plan your day. Change your life.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#050916",
+  "theme_color": "#081126",
+  "categories": [
+    "productivity",
+    "lifestyle"
+  ],
+  "icons": [
+    {
+      "src": "icons/nova-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/nova-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
